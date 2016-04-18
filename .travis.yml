@@ -9,6 +9,8 @@ cache:
   - $HOME/Tools
   - $HOME/intellij_src
 before_install:
+  - gradle clean
+  - gradle wrapper
   - chmod +x gradlew
   - chmod +x fetchIdea.sh
   - ./fetchIdea.sh 2016.1
