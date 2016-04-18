@@ -23,6 +23,6 @@ cd /tmp/clonedir
 
 # Add, commit, and push
 echo "  4  . Add, commit, and push:"
-git add *.zip
+git add *.jar
 git commit -a -m "Committed by Travis-CI"
 git push https://${GH_OAUTH_TOKEN}@${GH_REF} 2>&1
