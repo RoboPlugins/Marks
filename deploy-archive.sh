@@ -15,7 +15,7 @@ git clone https://${GH_OAUTH_TOKEN}@${GH_REF} clonedir
 
 # copy jars to directory
 echo " 2. copy jars to directory."
-cp $TRAVIS_BUILD_DIR/build/PainPoints-*.zip /tmp/clonedir/PainPoints.zip
+cp $TRAVIS_BUILD_DIR/build/Marks-*.zip /tmp/clonedir/Marks.zip
 
 # Go to clone we created earlier.
 echo "  3. Go to clone we created earlier.:"
