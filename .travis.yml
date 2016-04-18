@@ -9,13 +9,14 @@ cache:
   - $HOME/Tools
   - $HOME/intellij_src
 before_install:
+  - ./gradlew init
   - chmod +x fetchIdea.sh
   - ./fetchIdea.sh 2016.1
 script:
   - rm ~/.gradle/daemon/*/*.log
   - rm ~/.gradle/daemon/*/*.bin.lock
 after_success:
-  - gradlew archive
+  - ./gradlew archive
   - ls -la
   - chmod +x $TRAVIS_BUILD_DIR/deploy-archive.sh
   - $TRAVIS_BUILD_DIR/deploy-archive.sh
