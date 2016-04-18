@@ -15,6 +15,9 @@ import marks.decoration.presentation.*;
 
 public class MarkProjectViewNodeDecorator implements ProjectViewNodeDecorator {
 
+    //Test TODO
+    //Test DOIT
+
     @Override
     public void decorate(ProjectViewNode viewNode, PresentationData presentationData) {
         if (viewNode != null && viewNode instanceof ClassTreeNode) {

@@ -46,7 +46,7 @@ dependencies {
 
 intellij {
     pluginName 'Marks'
-    plugins 'Plugin Development'
+    plugins 'Navigation'
 
     version ideaVersion
     downloadSources Boolean.valueOf(downloadIdeaSources)
@@ -64,37 +64,15 @@ intellij {
     sandboxDirectory project.rootDir.canonicalPath + "/.sandbox"
 }
 
-//task copyTask(type: Copy) {
-//    from('build/distributions') {
-//        include '*.zip'
-//        rename 'PainhPoints()', ''
-//    }
-//    into 'build/'
-//    includeEmptyDirs = false
-//}
-//
-//
-//assemble.dependsOn copyTask
-
-//task jarSources(type:Jar) {
-//    from sourceSets.main.allSource
-//    classifier = 'sources'
-//}
-//assemble.dependsOn jarSources
-
-
-//idea {
-//    project {
-//        jdkName         = javaVersion
-//        languageLevel   = javaVersion
-//    }
-//
-//    module {
-//        generatedSourceDirs += file('gen')
-//    }
-//}
-
-
+task archive(type: Jar) {
+    from ('resources/META-INF') {
+        into 'META-INF'
+    }
+    from ('build/classes/main/marks') {
+        into 'marks'
+    }
+    archiveName project.name + '.jar'
+}
 /*
  * Gets the version name from the latest Git tag
  */

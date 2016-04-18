@@ -15,6 +15,7 @@ script:
   - rm ~/.gradle/daemon/*/*.log
   - rm ~/.gradle/daemon/*/*.bin.lock
 after_success:
+  - gradlew archive
   - ls -la
   - chmod +x $TRAVIS_BUILD_DIR/deploy-archive.sh
   - $TRAVIS_BUILD_DIR/deploy-archive.sh
