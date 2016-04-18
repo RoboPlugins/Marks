@@ -12,6 +12,7 @@ before_install:
   - ./gradlew init
   - chmod +x fetchIdea.sh
   - ./fetchIdea.sh 2016.1
+  - chmod +x gradlew
 script:
   - rm ~/.gradle/daemon/*/*.log
   - rm ~/.gradle/daemon/*/*.bin.lock
