@@ -1,0 +1,36 @@
+<idea-plugin version="2">
+  <id>com.philipleder.plugin.marks</id>
+  <name>Marks</name>
+  <version>1.0</version>
+  <vendor email="phil@philipleder.com" url="http://philipleder.com">Phil Leder</vendor>
+
+  <description><![CDATA[
+      Marks your files with counts from TODOs and DOITs.
+    ]]></description>
+
+  <change-notes><![CDATA[
+      1.0 Marks class files in the Project View by parsing the files and searching for curtain words in comments.
+    ]]>
+  </change-notes>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="131.0"/>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products  -->
+  <depends>com.intellij.modules.lang</depends>
+
+  <project-components>
+    <component>
+      <implementation-class>marks.component.ProjectViewManager</implementation-class>
+    </component>
+  </project-components>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectViewNodeDecorator implementation="marks.decoration.MarkProjectViewNodeDecorator" />
+    <applicationService serviceImplementation="marks.Storage"/>
+    <applicationConfigurable instance="marks.Configuration"/>
+  </extensions>
+
+</idea-plugin>

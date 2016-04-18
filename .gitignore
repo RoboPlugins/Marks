@@ -1,0 +1,23 @@
+out/
+build/
+
+## Directory-based project format
+.idea/*
+.idea
+
+##*.iml
+## .idea directory exceptions.  Do not ignore.
+##Shared run configurations
+!.idea/runConfigurations/
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Compiled
+*.class
+
+# Cache
+.gradle
+.sandbox

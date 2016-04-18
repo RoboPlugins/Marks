@@ -1,0 +1,120 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        flatDir {
+            dirs 'libs'
+        }
+    }
+    dependencies {
+        classpath 'gradle.plugin.org.jetbrains:gradle-intellij-plugin:0.0.43'
+    }
+}
+
+plugins {
+    id "org.jetbrains.intellij" version "0.0.43"
+}
+
+group 'com.roboplugins'
+apply plugin: 'idea'
+apply plugin: "org.jetbrains.intellij"
+
+apply plugin: 'java'
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src'
+        }
+        resources {
+            srcDirs 'resources'
+        }
+    }
+    test {
+        java {
+            srcDir 'test'
+        }
+        resources {
+            srcDirs 'test/resources'
+        }
+    }
+}
+
+dependencies {
+    runtime fileTree(dir: 'libs', include: '*.jar')
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+intellij {
+    pluginName 'Marks'
+    plugins 'Plugin Development'
+
+    version ideaVersion
+    downloadSources Boolean.valueOf(downloadIdeaSources)
+    // FIXME: hack to support both IDEA 15 and IDEA 16.
+    // See https://github.com/intellij-rust/intellij-rust/issues/243
+    updateSinceUntilBuild = true
+
+    publish {
+        username publishUsername
+        password publishPassword
+        pluginId '8232'
+        channel publishChannel
+    }
+
+    sandboxDirectory project.rootDir.canonicalPath + "/.sandbox"
+}
+
+//task copyTask(type: Copy) {
+//    from('build/distributions') {
+//        include '*.zip'
+//        rename 'PainhPoints()', ''
+//    }
+//    into 'build/'
+//    includeEmptyDirs = false
+//}
+//
+//
+//assemble.dependsOn copyTask
+
+//task jarSources(type:Jar) {
+//    from sourceSets.main.allSource
+//    classifier = 'sources'
+//}
+//assemble.dependsOn jarSources
+
+
+//idea {
+//    project {
+//        jdkName         = javaVersion
+//        languageLevel   = javaVersion
+//    }
+//
+//    module {
+//        generatedSourceDirs += file('gen')
+//    }
+//}
+
+
+/*
+ * Gets the version name from the latest Git tag
+ */
+def getVersionName() {
+    def stdout = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine 'git', 'describe', '--tags'
+            standardOutput = stdout
+        }
+    } catch (ignored) {
+        return '0.0.0'
+    }
+
+    def version = stdout.toString().trim()
+    if (version.startsWith('v')) {
+        version = version.substring(1)
+    }
+    return version
+}
+task wrapper(type: Wrapper) {
+    distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
+}

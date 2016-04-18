@@ -1,0 +1,51 @@
+<idea-plugin version="2">
+  <id>painpoints</id>
+  <name>PainPoints</name>
+  <version>1.17.5</version>
+  <vendor email="phil@philipleder.com" url="http://philipleder.com">Phil Leder</vendor>
+
+  <description><![CDATA[
+      PainPoints.  Boo boos.  Yuckyness.  H@CKS
+    ]]></description>
+
+  <change-notes><![CDATA[
+      Figuring out how to change this when loading from an enterprise repo.
+    ]]>
+  </change-notes>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="131.0"/>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products  -->
+  <depends>com.intellij.modules.lang</depends>
+
+  <project-components>
+    <component>
+      <implementation-class>marks.component.ProjectViewManager</implementation-class>
+    </component>
+  </project-components>
+
+  <actions>
+    <action id="PainPoints.EditorMenuAction"
+            class="marks.action.EditorMenuItem"
+            text="Report Pain Point"
+            description="Pain Point Editor Menu Item">
+      <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="shift BACK_QUOTE" />
+    </action>
+    <action id="PainPoints.ProjectViewMenuAction"
+            class="marks.action.EditorMenuItem"
+            text="Report Pain Point"
+            description="Pain Point Project View Navigation Menu Item">
+      <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="shift BACK_QUOTE" />
+    </action>
+  </actions>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectViewNodeDecorator implementation="marks.decoration.MarkProjectViewNodeDecorator" />
+  </extensions>
+
+</idea-plugin>

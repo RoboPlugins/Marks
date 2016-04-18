@@ -1,0 +1,31 @@
+language: java
+jdk: openjdk7
+branches:
+  only:
+    - ci
+cache:
+  directories:
+  - $HOME/.gradle
+  - $HOME/Tools
+  - $HOME/intellij_src
+before_install:
+  - chmod +x fetchIdea.sh
+  - ./fetchIdea.sh 15.0.3
+script:
+  - rm ~/.gradle/daemon/*/*.log
+  - rm ~/.gradle/daemon/*/*.bin.lock
+after_success:
+  - ls -la
+  - chmod +x $TRAVIS_BUILD_DIR/deploy-archive.sh
+  - $TRAVIS_BUILD_DIR/deploy-archive.sh
+env:
+  matrix:
+    - secure: "S5VwpnUZbK4nuyTJLlJdkQlTeSryGyNN+fgtl/h7sBNbYwj7q+zGLP+QiQubCKWWCsortriLoD6vt2kIDe1fPtPP5Uxm2vI8pqFJKVwkmompx6FQhPPJAuYkiht9spd0oHzyOEwt2cCzoJVGb7rsjpCniShKwR3Z50RljuCdfZma7A3DRuGAvkTjZw6EqwN5DcbzF1xJxO8Zy9Y+YU0+a4Via7lH+7PEm97NAX/Pby+YdVtX1C7+03BiHxA6pheVkUQJvAuEYi0HqsxSORPsy8dj6nrkfAFJciAj3/C5xo7FXY+yMf5sjpGEBIJtPoi1HMtZL8g5E6noi/s+N0s/WwuZM3Z1j+UJJ5MbTTqdIqWuZ0Ve+84cvmj5xDh62ZX9zoZsCpEVswFYa/Q6gQ9lFriMXV8RUZrsRic3UEQrxDw2qATH4YztZHNBHCxh2gbUA9+LfFAgXPi55MSQSSk3O7WhXwxZdy8HNKjAP+aRIxYf2MLj08xvuwyI+Xsr6XWdfTgVGVdeVd1wGsJ8z6vcnAhsfFRYUTqnTi/rLkhuURx2d7W53T/aV4VifxmeTvQnT+SXMxkbB47NeTR4NSUgxEqnHU/+Cfyim/qMjROWrH1eQ7Z9Ymn0jTsrOGMPetyRphJhdge6rf3eR2J8ZC/cAk18Z12lcB+rUVyGSKKqqf8="
+  global:
+    - GH_USER_NAME: "schlank"
+    - GH_PROJECT_NAME: "PainPoints"
+    - GH_REPO_NAME: "schlank.github.io"
+    - GIT_AUTHOR_NAME: "Philip Leder"
+    - GIT_AUTHOR_EMAIL: "phil@philipleder.com"
+    - CI_HOME=`pwd`/$TRAVIS_REPO_SLUG
+    - GH_REF: "github.com/roboplugins/roboplugins.github.io"
