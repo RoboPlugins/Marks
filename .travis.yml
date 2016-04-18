@@ -10,7 +10,7 @@ cache:
   - $HOME/intellij_src
 before_install:
   - chmod +x fetchIdea.sh
-  - ./fetchIdea.sh 15.0.3
+  - ./fetchIdea.sh 2016.1
 script:
   - rm ~/.gradle/daemon/*/*.log
   - rm ~/.gradle/daemon/*/*.bin.lock
