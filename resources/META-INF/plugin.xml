@@ -17,12 +17,6 @@
 
   <depends>com.intellij.modules.lang</depends>
 
-  <project-components>
-    <component>
-      <implementation-class>marks.component.ProjectViewManager</implementation-class>
-    </component>
-  </project-components>
-
   <extensions defaultExtensionNs="com.intellij">
     <projectViewNodeDecorator implementation="marks.decoration.MarkProjectViewNodeDecorator" />
   </extensions>
