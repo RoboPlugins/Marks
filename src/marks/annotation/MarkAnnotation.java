@@ -9,8 +9,12 @@ import com.intellij.openapi.editor.FoldingModel;
 import com.intellij.openapi.editor.markup.*;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.tree.PsiCommentImpl;
 import com.intellij.ui.JBColor;
+import marks.common.MarkParse;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -19,20 +23,30 @@ import java.util.regex.Pattern;
 
 public class MarkAnnotation implements Annotator {
 
+    //REGION
     private static final String REGION = "region";
     private static final JBColor REGION_COLOR = new JBColor(8089544, 8089544);
     private static final EffectType REGION_DECORATION = EffectType.LINE_UNDERSCORE;
     private static final int REGION_TEXT_STYLE = Font.ITALIC;
 
+    //DOIT
+    private static final JBColor DOIT_COLOR = JBColor.ORANGE;
+    private static final int DOIT_TEXT_STYLE = Font.BOLD;
+
+
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull final AnnotationHolder holder) {
 
-        final Project project = element.getProject();
+
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             public void run() {
+
+                Project project = element.getProject();
                 FileEditorManager editorManager = FileEditorManager.getInstance(project);
                 Editor editor = editorManager.getSelectedTextEditor();
                 if (editor != null) {
+
+                    //Hightlight Regions
                     FoldingModel foldingModel = editor.getFoldingModel();
                     FoldRegion[] foldRegions = foldingModel.getAllFoldRegions();
                     for (FoldRegion foldRegion : foldRegions) {
@@ -44,9 +58,27 @@ public class MarkAnnotation implements Annotator {
                             highlightRegion(foldRegion, editor);
                         }
                     }
+
+                    if(element instanceof PsiCommentImpl && StringUtils.containsIgnoreCase(element.getText(), MarkParse.DOIT)) {
+                        //Highlight Marks.
+                        highlightElement(element, editor);
+                    }
+
                 }
             }
         });
+    }
+
+    private static void highlightElement(PsiElement psiElement, Editor editor) {
+
+        TextRange textRange = psiElement.getTextRange();
+        TextAttributes textattributes = new TextAttributes(DOIT_COLOR, null, DOIT_COLOR, null, DOIT_TEXT_STYLE);
+        editor.getMarkupModel().addRangeHighlighter(
+                textRange.getStartOffset(),
+                textRange.getStartOffset() + textRange.getLength(),
+                HighlighterLayer.WARNING,
+                textattributes,
+                HighlighterTargetArea.LINES_IN_RANGE);
     }
 
     private void highlightRegion(FoldRegion foldRegion, Editor editor) {

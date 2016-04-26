@@ -20,11 +20,6 @@ public class MarkDecoration {
         mMarkPresentation = markPresentation;
     }
 
-    protected VirtualFile getVirtualFile(ProjectViewNode node) {
-        ClassTreeNode classNode = (ClassTreeNode) node;
-        return PsiUtilBase.getVirtualFile(classNode.getPsiClass());
-    }
-
     private String getName(ProjectViewNode node) {
         if (node instanceof ClassTreeNode) {
             ClassTreeNode classNode = (ClassTreeNode) node;
