@@ -18,20 +18,21 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MarkAnnotation implements Annotator {
 
     //REGION
     private static final String REGION = "region";
     private static final JBColor REGION_COLOR = new JBColor(8089544, 8089544);
-    private static final EffectType REGION_DECORATION = EffectType.LINE_UNDERSCORE;
-    private static final int REGION_TEXT_STYLE = Font.ITALIC;
+    private static final EffectType REGION_DECORATION = null;
+    private static final int REGION_TEXT_STYLE = Font.BOLD;
+    private static final int PLACEHOLDER_LENGTH_THRESHOLD = 20;
+    private static final String DEV_REGION_IDENTIFIER = "---------------------";
 
     //DOIT
     private static final JBColor DOIT_COLOR = JBColor.ORANGE;
-    private static final int DOIT_TEXT_STYLE = Font.BOLD;
+    private static final JBColor GERKIN_COLOR = JBColor.GREEN;
+    private static final int HIGHLIGHT_TEXT_STYLE = Font.BOLD;
 
 
     @Override
@@ -51,17 +52,22 @@ public class MarkAnnotation implements Annotator {
                     FoldRegion[] foldRegions = foldingModel.getAllFoldRegions();
                     for (FoldRegion foldRegion : foldRegions) {
                         String placeholderText = foldRegion.getPlaceholderText();
-                        Pattern p = Pattern.compile("[^a-z0-9 ]", Pattern.CASE_INSENSITIVE);
-                        Matcher m = p.matcher(placeholderText);
-                        boolean b = m.find();
-                        if (!b) {
+                        if(placeholderText.length() >= PLACEHOLDER_LENGTH_THRESHOLD  &&
+                                placeholderText.contains(DEV_REGION_IDENTIFIER)) {
                             highlightRegion(foldRegion, editor);
                         }
                     }
 
-                    if(element instanceof PsiCommentImpl && StringUtils.containsIgnoreCase(element.getText(), MarkParse.DOIT)) {
-                        //Highlight Marks.
-                        highlightElement(element, editor);
+                    if(element instanceof PsiCommentImpl) {
+                        if(StringUtils.containsIgnoreCase(element.getText(), MarkParse.DOIT)) {
+                            //Highlight DOIT Marks.
+                            highlightDOITElement(element, editor);
+                        }
+                        if( StringUtils.containsIgnoreCase(element.getText(), MarkParse.GIVEN) ||
+                                StringUtils.containsIgnoreCase(element.getText(), MarkParse.WHEN) ||
+                                StringUtils.containsIgnoreCase(element.getText(), MarkParse.THEN)) {
+                            highlightTESTElement(element, editor);
+                        }
                     }
 
                 }
@@ -69,16 +75,28 @@ public class MarkAnnotation implements Annotator {
         });
     }
 
-    private static void highlightElement(PsiElement psiElement, Editor editor) {
+    private static void highlightDOITElement(PsiElement psiElement, Editor editor) {
 
         TextRange textRange = psiElement.getTextRange();
-        TextAttributes textattributes = new TextAttributes(DOIT_COLOR, null, DOIT_COLOR, null, DOIT_TEXT_STYLE);
+        TextAttributes textattributes = new TextAttributes(DOIT_COLOR, null, DOIT_COLOR, null, HIGHLIGHT_TEXT_STYLE);
         editor.getMarkupModel().addRangeHighlighter(
                 textRange.getStartOffset(),
                 textRange.getStartOffset() + textRange.getLength(),
                 HighlighterLayer.WARNING,
                 textattributes,
                 HighlighterTargetArea.LINES_IN_RANGE);
+    }
+
+    private static void highlightTESTElement(PsiElement psiElement, Editor editor) {
+
+        TextRange textRange = psiElement.getTextRange();
+        TextAttributes textattributes = new TextAttributes(GERKIN_COLOR, null, GERKIN_COLOR, null, HIGHLIGHT_TEXT_STYLE);
+        editor.getMarkupModel().addRangeHighlighter(
+                textRange.getStartOffset(),
+                textRange.getStartOffset() + textRange.getLength(),
+                HighlighterLayer.WARNING,
+                textattributes,
+                HighlighterTargetArea.EXACT_RANGE);
     }
 
     private void highlightRegion(FoldRegion foldRegion, Editor editor) {
@@ -92,7 +110,7 @@ public class MarkAnnotation implements Annotator {
                 HighlighterTargetArea.LINES_IN_RANGE);
 
         editor.getMarkupModel().addRangeHighlighter(
-                foldRegion.getEndOffset() - foldRegion.getPlaceholderText().length(),
+                foldRegion.getEndOffset() - 9, //9 for "endRegion"
                 foldRegion.getEndOffset(),
                 HighlighterLayer.WARNING,
                 textattributes,

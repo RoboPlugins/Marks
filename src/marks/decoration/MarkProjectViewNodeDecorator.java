@@ -21,9 +21,7 @@ public class MarkProjectViewNodeDecorator implements ProjectViewNodeDecorator {
     @Override
     public void decorate(ProjectViewNode viewNode, PresentationData presentationData) {
         if (viewNode != null && viewNode instanceof ClassTreeNode) {
-
             final ClassTreeNode classTreeNode = (ClassTreeNode) viewNode;
-
             DoitPresentationFactory doitPresentationFactory = new DoitPresentationFactory();
             DoitPresentation presentation = (DoitPresentation)doitPresentationFactory.createPresentation(classTreeNode, DoitPresentationFactory.DOIT);
             TodoPresentation todoPresentation = (TodoPresentation)doitPresentationFactory.createPresentation(classTreeNode, DoitPresentationFactory.TODO);
