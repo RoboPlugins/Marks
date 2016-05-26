@@ -24,9 +24,9 @@ public class MarkParse {
 
     static final String TODO = "TODO";
     public static final String DOIT = "DOIT";
-    public static final String GIVEN = "GIVEN";
-    public static final String WHEN = "WHEN";
-    public static final String THEN = "THEN";
+    public static final String GIVEN = "// GIVEN";
+    public static final String WHEN = "// WHEN";
+    public static final String THEN = "// THEN";
 
     public static Map<String, Integer> parseForMarks(PsiFile psiFile) {
         final Map<String, Integer> marks = new HashMap<String, Integer>();

@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.philipleder.plugin.marks</id>
   <name>Marks</name>
-  <version>1.3</version>
+  <version>1.3.1</version>
   <vendor email="phil@philipleder.com" url="http://philipleder.com">Phil Leder</vendor>
 
   <description><![CDATA[
@@ -9,6 +9,7 @@
     ]]></description>
 
   <change-notes><![CDATA[
+      <li>1.3.1 Sped up the plugin using userData on elements.</li>
       <li>1.3 Added GIVEN WHEN THEN marks.</li>
       <li>1.2 Make regions fancy.</li>
       <li>1.2.1 Added Highlighting to DOITs.</li>
