@@ -5,7 +5,7 @@
   <vendor email="phil@philipleder.com" url="http://philipleder.com">Phil Leder</vendor>
 
   <description><![CDATA[
-      Marks your files with counts from TODOs and DOITs.
+      Marks your files with counts from TODOs and DOITs.  Makes your regions and GHERKIN pretty.
     ]]></description>
 
   <change-notes><![CDATA[
@@ -24,6 +24,8 @@
   <extensions defaultExtensionNs="com.intellij">
     <projectViewNodeDecorator implementation="marks.decoration.MarkProjectViewNodeDecorator" />
     <annotator language="JAVA" implementationClass="marks.annotation.MarkAnnotation" />
+    <applicationService serviceImplementation="marks.config.Storage"/>
+    <applicationConfigurable instance="marks.config.Configuration" />
   </extensions>
 
 </idea-plugin>
