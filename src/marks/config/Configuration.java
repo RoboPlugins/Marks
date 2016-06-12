@@ -17,9 +17,9 @@ import java.awt.*;
 
 public class Configuration implements Configurable, ChangeListener {
 
-    private Storage mStorage = ServiceManager.getService(Storage.class);
-    private Color mRegionColor;
-    private Color defaultRegionColor = new JBColor(8089544, 8089544);
+    private MarkSettingsStorage mStorage = ServiceManager.getService(MarkSettingsStorage.class);
+    private Integer mRegionColor = 8089544;
+    private Color defaultRegionJBColor = new JBColor(mRegionColor, mRegionColor);
     boolean mModified = false;
     private JColorChooser tcc;
     @Nls
@@ -39,10 +39,8 @@ public class Configuration implements Configurable, ChangeListener {
     public JComponent createComponent() {
 
         if(mStorage.getRegionColor() != null) {
-            int regionRGB = mStorage.getRegionColor();
-            mRegionColor = new JBColor(regionRGB, regionRGB);
-        } else {
-            mRegionColor = defaultRegionColor;
+            Integer regionRGB = mStorage.getRegionColor();
+            mRegionColor = mStorage.getRegionColor();
         }
 
         // Create a message
@@ -53,7 +51,7 @@ public class Configuration implements Configurable, ChangeListener {
         bannerPanel.setBorder(BorderFactory.createTitledBorder("Banner"));
 
         //Set up color chooser for setting text color
-        tcc = new JColorChooser(mRegionColor);
+        tcc = new JColorChooser(new JBColor(mRegionColor, mRegionColor));
         tcc.getSelectionModel().addChangeListener(this);
         tcc.setBorder(BorderFactory.createTitledBorder(
                 "Choose Text Color"));
@@ -71,9 +69,12 @@ public class Configuration implements Configurable, ChangeListener {
 
     @Override
     public void apply() throws ConfigurationException {
-        PluginManager.getLogger().info("apply");
-        ApplicationManager.getApplication().saveAll();
+        Integer regionColor = getRegionColor();
+        PluginManager.getLogger().warn("1 apply mRegionColor:" + mRegionColor);
         mStorage.setRegionColor(mRegionColor);
+        PluginManager.getLogger().warn("2 apply mRegionColor:" + mRegionColor);
+        ApplicationManager.getApplication().saveAll();
+        PluginManager.getLogger().warn("3 apply mRegionColor:" + mRegionColor);
         mModified = false;
     }
 
@@ -82,9 +83,8 @@ public class Configuration implements Configurable, ChangeListener {
         PluginManager.getLogger().info("reset");
         Integer regionColor = mStorage.getRegionColor();
         if(regionColor != null) {
-            mRegionColor = new JBColor(regionColor, regionColor);
-        } else {
-            mRegionColor = defaultRegionColor;
+            mRegionColor = regionColor;
+            PluginManager.getLogger().warn("reset regionColor != null: " + mRegionColor);
         }
     }
 
@@ -97,16 +97,18 @@ public class Configuration implements Configurable, ChangeListener {
     public void stateChanged(ChangeEvent e) {
         Color newColor = tcc.getColor();
         mModified = true;
-        mStorage.setRegionColor(newColor);
+        mStorage.setRegionColor(newColor.getRGB());
+        mRegionColor = getRegionColor();
+        PluginManager.getLogger().warn("stateChanged: " + mStorage.getRegionColor());
     }
-    public JBColor getRegionColor() {
+
+    public Integer getRegionColor() {
         PluginManager.getLogger().info("reset");
         Integer regionColor = mStorage.getRegionColor();
         if(regionColor != null) {
-            mRegionColor = new JBColor(regionColor, regionColor);
-        } else {
-            mRegionColor = defaultRegionColor;
+            mRegionColor = regionColor;
         }
-        return new JBColor(mRegionColor, mRegionColor);
+        PluginManager.getLogger().info("getRegionColor: " + mStorage.getRegionColor());
+        return mRegionColor;
     }
 }

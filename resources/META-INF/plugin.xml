@@ -24,8 +24,15 @@
   <extensions defaultExtensionNs="com.intellij">
     <projectViewNodeDecorator implementation="marks.decoration.MarkProjectViewNodeDecorator" />
     <annotator language="JAVA" implementationClass="marks.annotation.MarkAnnotation" />
-    <applicationService serviceImplementation="marks.config.Storage"/>
-    <applicationConfigurable instance="marks.config.Configuration" />
+    <applicationService serviceImplementation="marks.config.MarkSettingsStorage"/>
+    <projectConfigurable instance="marks.config.Configuration" />
   </extensions>
+
+    <!--<application-components>-->
+        <!--<component>-->
+            <!--<implementation-class>marks.config.Configuration</implementation-class>-->
+            <!--<interface-class>marks.config.Configuration</interface-class>-->
+        <!--</component>-->
+    <!--</application-components>-->
 
 </idea-plugin>

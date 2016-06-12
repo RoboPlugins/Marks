@@ -20,7 +20,7 @@ import com.intellij.psi.impl.source.tree.PsiCommentImpl;
 import com.intellij.ui.JBColor;
 import marks.common.MarkParse;
 import marks.config.Configuration;
-import marks.config.Storage;
+import marks.config.MarkSettingsStorage;
 import marks.git.GitRunner;
 import marks.pairing.PairConfig;
 import marks.pairing.PairController;
@@ -48,7 +48,6 @@ public class MarkAnnotation implements Annotator {
     private static final JBColor DOIT_COLOR = JBColor.ORANGE;
     private static final JBColor GERKIN_COLOR = JBColor.GREEN;
     private static final int HIGHLIGHT_TEXT_STYLE = Font.BOLD;
-
 
     private String getPairs(Project project) {
 
@@ -84,12 +83,11 @@ public class MarkAnnotation implements Annotator {
 //        if (pairs != null && pairs.contains("Kennedy")) {
 //            mRegionColor = JBColor.PINK;
 //        }
-        Storage storage = ServiceManager.getService(Storage.class);
         Configuration configuration = new Configuration();
-        JBColor storedColor = configuration.getRegionColor();
-        Integer regionColorRGB = storage.getRegionColor();
+        final Integer storedColor = configuration.getRegionColor();
+        PluginManager.getLogger().warn("annotate storedColor: " + storedColor);
         if(storedColor != null) {
-            mRegionColor = storedColor;
+            mRegionColor = new JBColor(storedColor, storedColor);
         }
         //Hightlight by Regions
         ApplicationManager.getApplication().invokeLater(new Runnable() {
@@ -100,12 +98,13 @@ public class MarkAnnotation implements Annotator {
                         FoldingModel foldingModel = editor.getFoldingModel();
                         FoldRegion[] foldRegions = foldingModel.getAllFoldRegions();
                         for (FoldRegion foldRegion : foldRegions) {
-                            if (foldRegion.getUserData(HIGHLIGHTED_KEY) == null) {
+                            Integer currentColorData = (Integer)foldRegion.getUserData(HIGHLIGHTED_KEY);
+                            if (currentColorData == null || !currentColorData.equals(storedColor)) {
                                 String placeholderText = foldRegion.getPlaceholderText();
                                 if (placeholderText.length() >= PLACEHOLDER_LENGTH_THRESHOLD &&
                                         placeholderText.contains(DEV_REGION_IDENTIFIER)) {
                                     highlightRegion(foldRegion, editor);
-                                    foldRegion.putUserData(HIGHLIGHTED_KEY, HIGHLIGHTED_VALUE);
+                                    foldRegion.putUserData(HIGHLIGHTED_KEY, storedColor);
                                 }
                             }
                         }
@@ -201,19 +200,28 @@ public class MarkAnnotation implements Annotator {
 
         try {
             TextAttributes textattributes = new TextAttributes(mRegionColor, null, mRegionColor, REGION_DECORATION, REGION_TEXT_STYLE);
-            editor.getMarkupModel().addRangeHighlighter(
-                    foldRegion.getStartOffset(),
-                    foldRegion.getStartOffset() + foldRegion.getPlaceholderText().length(),
-                    HighlighterLayer.WARNING,
-                    textattributes,
-                    HighlighterTargetArea.LINES_IN_RANGE);
+//            editor.getMarkupModel().addRangeHighlighter(
+//                    foldRegion.getStartOffset(),
+//                    foldRegion.getStartOffset() + foldRegion.getPlaceholderText().length(),
+//                    HighlighterLayer.WARNING,
+//                    textattributes,
+//                    HighlighterTargetArea.LINES_IN_RANGE);
 
-            editor.getMarkupModel().addRangeHighlighter(
-                    foldRegion.getEndOffset() - 9, //9 for "endRegion"
-                    foldRegion.getEndOffset(),
-                    HighlighterLayer.WARNING,
-                    textattributes,
-                    HighlighterTargetArea.LINES_IN_RANGE);
+
+            editor.getMarkupModel().removeAllHighlighters();
+
+            final int startLine = editor.getDocument().getLineNumber(foldRegion.getStartOffset());
+            final int endLine = editor.getDocument().getLineNumber(foldRegion.getEndOffset());
+
+            editor.getMarkupModel().addLineHighlighter(startLine, HighlighterLayer.WARNING, textattributes);
+            editor.getMarkupModel().addLineHighlighter(endLine, HighlighterLayer.WARNING, textattributes);
+
+//            editor.getMarkupModel().addRangeHighlighter(
+//                    foldRegion.getEndOffset() - 9, //9 for "endRegion"
+//                    foldRegion.getEndOffset(),
+//                    HighlighterLayer.WARNING,
+//                    textattributes,
+//                    HighlighterTargetArea.LINES_IN_RANGE);
         } catch (IllegalArgumentException ex) {
             PluginManager.getLogger().warn("IllegalArgumentException: " + ex.getMessage());
         }
