@@ -42,5 +42,6 @@ public class MarkSettingsStorage implements PersistentStateComponent<MarksPlugin
     void setRegionColor(Integer regionColor) {
         pluginState.setRegionRGB(regionColor);
         PluginManager.getLogger().warn("setRegionColor regionColor: " + pluginState.getRegionRGB());
+
     }
 }

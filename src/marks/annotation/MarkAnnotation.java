@@ -4,7 +4,6 @@ import com.intellij.ide.plugins.PluginManager;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.FoldRegion;
 import com.intellij.openapi.editor.FoldingModel;
@@ -20,7 +19,6 @@ import com.intellij.psi.impl.source.tree.PsiCommentImpl;
 import com.intellij.ui.JBColor;
 import marks.common.MarkParse;
 import marks.config.Configuration;
-import marks.config.MarkSettingsStorage;
 import marks.git.GitRunner;
 import marks.pairing.PairConfig;
 import marks.pairing.PairController;
@@ -43,118 +41,18 @@ public class MarkAnnotation implements Annotator {
     private static final int REGION_TEXT_STYLE = Font.BOLD;
     private static final int PLACEHOLDER_LENGTH_THRESHOLD = 20;
     private static final String DEV_REGION_IDENTIFIER = "---------------------";
+    private boolean mColorChangeFound = false;
 
     //DOIT
     private static final JBColor DOIT_COLOR = JBColor.ORANGE;
     private static final JBColor GERKIN_COLOR = JBColor.GREEN;
     private static final int HIGHLIGHT_TEXT_STYLE = Font.BOLD;
 
-    private String getPairs(Project project) {
-
-        String projectPath = project.getBasePath();
-        if (projectPath == null) {
-            return null;
-        }
-        String configFile = projectPath.concat("/.pairs");
-        String configYaml = "";
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(configFile));
-            String line;
-            while ((line = br.readLine()) != null) {
-                configYaml += line + "\n";
-            }
-        } catch (IOException e) {
-            System.out.println("Git Pair plugin couldn't open " + configFile + ": " + e.getMessage());
-            return null;
-        }
-
-        PairConfig pairConfig = new PairConfig(configYaml);
-        GitRunner gitRunner = new GitRunner(projectPath);
-        PairController pairController = new PairController(pairConfig, gitRunner);
-        pairController.init();
-        return pairController.getPairDisplayName();
-    }
-
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull final AnnotationHolder holder) {
-
-//        Project project = element.getProject();
-//        String pairs = getPairs(project);
-//        if (pairs != null && pairs.contains("Kennedy")) {
-//            mRegionColor = JBColor.PINK;
-//        }
-        Configuration configuration = new Configuration();
-        final Integer storedColor = configuration.getRegionColor();
-        PluginManager.getLogger().warn("annotate storedColor: " + storedColor);
-        if(storedColor != null) {
-            mRegionColor = new JBColor(storedColor, storedColor);
-        }
-        //Hightlight by Regions
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            public void run() {
-                if (element instanceof PsiCommentImpl) {
-                    Editor editor = getEditor(element);
-                    if (editor != null) {
-                        FoldingModel foldingModel = editor.getFoldingModel();
-                        FoldRegion[] foldRegions = foldingModel.getAllFoldRegions();
-                        for (FoldRegion foldRegion : foldRegions) {
-                            Integer currentColorData = (Integer)foldRegion.getUserData(HIGHLIGHTED_KEY);
-                            if (currentColorData == null || !currentColorData.equals(storedColor)) {
-                                String placeholderText = foldRegion.getPlaceholderText();
-                                if (placeholderText.length() >= PLACEHOLDER_LENGTH_THRESHOLD &&
-                                        placeholderText.contains(DEV_REGION_IDENTIFIER)) {
-                                    highlightRegion(foldRegion, editor);
-                                    foldRegion.putUserData(HIGHLIGHTED_KEY, storedColor);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        //Highlight by Keywords
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            public void run() {
-                if (element instanceof PsiCommentImpl) {
-                    Editor editor = getEditor(element);
-                    if (editor != null) {
-                        // Highlight DOIT comments.
-                        if (StringUtils.containsIgnoreCase(element.getText(), MarkParse.DOIT)) {
-                            //Highlight DOIT Marks.
-                            if (element.getUserData(HIGHLIGHTED_KEY) == null) {
-                                highlightDOITElement(element, editor);
-                                element.putUserData(HIGHLIGHTED_KEY, HIGHLIGHTED_VALUE);
-                            }
-                        }
-                        // Highlight GERKIN comments.
-                        else if (StringUtils.contains(element.getText(), MarkParse.GIVEN) ||
-                                StringUtils.contains(element.getText(), MarkParse.WHEN) ||
-                                StringUtils.contains(element.getText(), MarkParse.THEN)) {
-                            if (element.getUserData(HIGHLIGHTED_KEY) == null) {
-                                highlightTESTElement(element, editor);
-                                element.putUserData(HIGHLIGHTED_KEY, HIGHLIGHTED_VALUE);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Parse for Missing GHERKIN in tests.  Only in test methods and test classes.
-        if (element instanceof PsiMethodImpl) {
-            PsiMethodImpl psiMethod = (PsiMethodImpl) element;
-            PsiClass psiClass = psiMethod.getContainingClass();
-            if (psiClass != null) {
-                String className = psiClass.getName();
-                if (className != null && className.endsWith("Test")) {
-                    GherkinParser gherkinParser = new GherkinParser();
-                    for (GherkinError error : gherkinParser.parse(element)) {
-                        holder.createWarningAnnotation(error.getElementToTag(), error.messageForError());
-                    }
-                }
-            }
-        }
+        parseRegions(element);
+        parseKeywords(element);
+        parseGherkin(element, holder);
     }
 
     @Nullable
@@ -208,7 +106,7 @@ public class MarkAnnotation implements Annotator {
 //                    HighlighterTargetArea.LINES_IN_RANGE);
 
 
-            editor.getMarkupModel().removeAllHighlighters();
+//            editor.getMarkupModel().removeAllHighlighters();
 
             final int startLine = editor.getDocument().getLineNumber(foldRegion.getStartOffset());
             final int endLine = editor.getDocument().getLineNumber(foldRegion.getEndOffset());
@@ -226,4 +124,116 @@ public class MarkAnnotation implements Annotator {
             PluginManager.getLogger().warn("IllegalArgumentException: " + ex.getMessage());
         }
     }
+
+    private void parseRegions(@NotNull final PsiElement element) {
+        Configuration configuration = new Configuration();
+        final Integer storedColor = configuration.getRegionColor();
+//        PluginManager.getLogger().warn("annotate storedColor: " + storedColor);
+        if(storedColor != null) {
+            mRegionColor = new JBColor(storedColor, storedColor);
+        }
+        //Hightlight by Regions
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                if (element instanceof PsiCommentImpl) {
+                    Editor editor = getEditor(element);
+                    if (editor != null) {
+                        FoldingModel foldingModel = editor.getFoldingModel();
+                        FoldRegion[] foldRegions = foldingModel.getAllFoldRegions();
+                        for (FoldRegion foldRegion : foldRegions) {
+                            Integer currentColorData = (Integer)foldRegion.getUserData(HIGHLIGHTED_KEY);
+                            if(!mColorChangeFound &&
+                                    currentColorData != null &&
+                                    !currentColorData.equals(storedColor)) {
+                                mColorChangeFound = true;
+                                editor.getMarkupModel().removeAllHighlighters();
+                            }
+                            if (currentColorData == null || mColorChangeFound) {
+                                String placeholderText = foldRegion.getPlaceholderText();
+                                if (placeholderText.length() >= PLACEHOLDER_LENGTH_THRESHOLD &&
+                                        placeholderText.contains(DEV_REGION_IDENTIFIER)) {
+                                    highlightRegion(foldRegion, editor);
+                                    foldRegion.putUserData(HIGHLIGHTED_KEY, storedColor);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private void parseGherkin(@NotNull final PsiElement element, @NotNull final AnnotationHolder holder) {
+        // Parse for Missing GHERKIN in tests.  Only in test methods and test classes.
+        if (element instanceof PsiMethodImpl) {
+            PsiMethodImpl psiMethod = (PsiMethodImpl) element;
+            PsiClass psiClass = psiMethod.getContainingClass();
+            if (psiClass != null) {
+                String className = psiClass.getName();
+                if (className != null && className.endsWith("Test")) {
+                    GherkinParser gherkinParser = new GherkinParser();
+                    for (GherkinError error : gherkinParser.parse(element)) {
+                        holder.createWarningAnnotation(error.getElementToTag(), error.messageForError());
+                    }
+                }
+            }
+        }
+    }
+
+    private void parseKeywords(@NotNull final PsiElement element) {
+        //Highlight by Keywords
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                if (element instanceof PsiCommentImpl) {
+                    Editor editor = getEditor(element);
+                    if (editor != null) {
+                        // Highlight DOIT comments.
+                        if (StringUtils.containsIgnoreCase(element.getText(), MarkParse.DOIT)) {
+                            //Highlight DOIT Marks.
+                            if (element.getUserData(HIGHLIGHTED_KEY) == null) {
+                                highlightDOITElement(element, editor);
+                                element.putUserData(HIGHLIGHTED_KEY, HIGHLIGHTED_VALUE);
+                            }
+                        }
+                        // Highlight GERKIN comments.
+                        else if (StringUtils.contains(element.getText(), MarkParse.GIVEN) ||
+                                StringUtils.contains(element.getText(), MarkParse.WHEN) ||
+                                StringUtils.contains(element.getText(), MarkParse.THEN)) {
+                            if (element.getUserData(HIGHLIGHTED_KEY) == null) {
+                                highlightTESTElement(element, editor);
+                                element.putUserData(HIGHLIGHTED_KEY, HIGHLIGHTED_VALUE);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private String getPairs(Project project) {
+
+        String projectPath = project.getBasePath();
+        if (projectPath == null) {
+            return null;
+        }
+        String configFile = projectPath.concat("/.pairs");
+        String configYaml = "";
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(configFile));
+            String line;
+            while ((line = br.readLine()) != null) {
+                configYaml += line + "\n";
+            }
+        } catch (IOException e) {
+            System.out.println("Git Pair plugin couldn't open " + configFile + ": " + e.getMessage());
+            return null;
+        }
+
+        PairConfig pairConfig = new PairConfig(configYaml);
+        GitRunner gitRunner = new GitRunner(projectPath);
+        PairController pairController = new PairController(pairConfig, gitRunner);
+        pairController.init();
+        return pairController.getPairDisplayName();
+    }
+
 }
